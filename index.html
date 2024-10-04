@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting and Searching Algorithms Visualization</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Algorithm Visualizer</h1>
+
+        <!-- Input Section -->
+        <div class="input-section">
+            <label for="numbersInput">Enter numbers (space-separated):</label>
+            <input type="text" id="numbersInput" placeholder="Example: 10 20 30 40" />
+            <button id="submitBtn">Submit</button>
+        </div>
+
+        <!-- Control Section (Dropdowns, Buttons, etc.) -->
+        <div class="controls">
+            <div class="algorithm-container">
+                <div class="dropdown">
+                    <label for="algorithmSelect">Choose Sorting Algorithm:</label>
+                    <select id="algorithmSelect">
+                        <option value="bubble">Bubble Sort</option>
+                        <option value="selection">Selection Sort</option>
+                        <option value="insertion">Insertion Sort</option>
+                        <option value="merge">Merge Sort</option>
+                        <option value="quick">Quick Sort</option>
+                    </select>
+                </div>
+                <div class="dropdown">
+                    <label for="searchAlgorithmSelect">Choose Searching Algorithm:</label>
+                    <select id="searchAlgorithmSelect">
+                        <option value="linear">Linear Search</option>
+                        <option value="binary">Binary Search</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button id="sortBtn">Start Sorting</button>
+            <button id="searchBtn">Start Searching</button>
+            <button id="resetBtn">Reset Bars</button>
+            <button id="clearSearchedElement">Clear Searched Element</button>
+            <button id="printSteps">Print Steps</button>
+            <button id="saveSteps">Save Steps</button>
+        </div>
+
+        <!-- Speed Control -->
+        <div class="speed-control">
+            <label for="speedRange">Adjust Animation Speed (ms):</label>
+            <input type="range" id="speedRange" min="50" max="2000" value="500">
+            <span id="speedValue">500 ms</span>
+        </div>
+
+        <!-- Bar Container (for displaying bars) -->
+        <div class="array-container" id="arrayContainer"></div>
+
+        <!-- Action Display -->
+        <div class="action-display" id="actionDisplay">Actions will be displayed here...</div>
+
+        <!-- Steps Display (scrollable) -->
+        <div class="steps-display" id="stepsDisplay"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -66,14 +66,56 @@ button:hover {
     box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
+
+
+
+
 .array-bar {
     width: 8%;
     margin: 0 2px;
     background-color: #3498db;
     border-radius: 5px;
     position: relative;
-    transition: transform 0.5s ease, height 0.5s ease;
+    transition: background-color 0.3s ease, height 0.3s ease, transform 0.3s ease;
 }
+.searching {
+    background-color: #ffcc00; /* Yellow for searching */
+    transition: background-color 0.3s ease;
+}
+
+.found {
+    background-color: #4caf50; /* Green for found */
+    transition: background-color 0.3s ease;
+}
+
+.not-found {
+    background-color: #f44336; /* Red for not found */
+    transition: background-color 0.3s ease;
+}
+
+.swapping {
+    background-color: #ff5722; /* Orange for swapping */
+    transition: background-color 0.3s ease;
+}
+
+.sorted {
+    background-color: #4caf50; /* Green for sorted */
+    transition: background-color 0.3s ease;
+}
+
+.unsorted {
+    background-color: #f44336; /* Red for unsorted */
+    transition: background-color 0.3s ease;
+}
+
+.comparing {
+    background-color: #ff9800; /* Orange for comparing */
+    transition: background-color 0.3s ease;
+}
+
+
+
+
 
 .array-bar.active {
     background-color: #e74c3c;

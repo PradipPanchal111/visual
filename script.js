@@ -26,10 +26,8 @@ submitBtn.addEventListener('click', () => {
         return;
     }
 
-    //numbers = input.split(' ').map(Number); // Convert input into an array of numbers
+    numbers = input.split(' ').map(Number); // Convert input into an array of numbers
     
-    // Limit the numbers to be <= 103
-    numbers = numbers.filter(num => num <= 103);
 
     if (numbers.length === 0) {
         alert("No valid numbers entered. ");

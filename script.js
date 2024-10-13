@@ -30,9 +30,6 @@ submitBtn.addEventListener('click', () => {
     
     // Limit the numbers to be <= 103
     numbers = numbers.filter(num => num <= 103);
-    {
-        alert("Please ensure that each number is <= 103.");
-    }
 
     if (numbers.length === 0) {
         alert("No valid numbers entered. ");

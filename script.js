@@ -21,7 +21,7 @@ submitBtn.addEventListener('click', () => {
     const input = numbersInput.value.trim();
     
     // Check if the input is empty or contains non-numeric values
-    if (!input || !/^\d+( \d+)*$/.test(input)|| (0).test(input)) {
+    if (!input || !/^\d+( \d+)*$/.test(input)) {
         alert("Please enter a valid list of numbers.");
         return;
     }

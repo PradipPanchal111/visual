@@ -812,18 +812,97 @@ window.onload = initialize;
 
 
 
-function updateVisitCount() {
-    fetch('https://algovis.goatcounter.com/counter/' + encodeURIComponent(location.pathname) + '.json')
-        .then(response => response.json())
-        .then(data => {
-            const count = data.count;
-            document.querySelector('#visit-count span').textContent = count;
-        })
-        .catch(error => {
-            console.error('Error fetching visit count:', error);
-            document.querySelector('#visit-count span').textContent = 'Error';
-        });
+// Add these with your other variable declarations at the top
+const repoVisitKey = 'github_algo_visualizer_visits';
+let pageVisits = localStorage.getItem(repoVisitKey) || 0;
+const visitDisplay = document.createElement('div');
+visitDisplay.className = 'counter-container';
+
+// Get GitHub repository info
+const githubInfo = {
+    username: 'YOUR_GITHUB_USERNAME', // Replace with your GitHub username
+    repo: 'YOUR_REPO_NAME'           // Replace with your repository name
+};
+
+visitDisplay.innerHTML = `
+    <p>Your Visits: <span id="visit-count">${pageVisits}</span></p>
+    <small>
+        <a href="https://github.com/${githubInfo.username}/${githubInfo.repo}" 
+           target="_blank" 
+           style="color: white; text-decoration: none; font-size: 12px;">
+            ${githubInfo.username}/${githubInfo.repo}
+        </a>
+    </small>
+`;
+document.body.appendChild(visitDisplay);
+
+// Add this to your initialize function
+function initialize() {
+    speedValue.textContent = `${speedRange.value} ms`;
+    resetInputs();
+    
+    // Update visit counter
+    pageVisits = parseInt(pageVisits) + 1;
+    localStorage.setItem(repoVisitKey, pageVisits);
+    document.getElementById('visit-count').textContent = pageVisits;
+
+    // Check if running on GitHub Pages
+    const isGitHubPages = window.location.hostname.includes('github.io');
+    if (isGitHubPages) {
+        visitDisplay.style.display = 'block';
+    } else {
+        visitDisplay.style.display = 'none'; // Hide counter on local development
+    }
 }
 
-// Call this function when the page loads
-document.addEventListener('DOMContentLoaded', updateVisitCount);
+// Add this CSS to your existing styles
+const styles = document.createElement('style');
+styles.textContent = `
+    .counter-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(33, 150, 243, 0.9);
+        padding: 10px 15px;
+        border-radius: 8px;
+        color: white;
+        font-size: 14px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        z-index: 1000;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .counter-container:hover {
+        transform: scale(1.05);
+        background: rgba(33, 150, 243, 1);
+    }
+
+    #visit-count {
+        font-weight: bold;
+        margin-left: 5px;
+    }
+
+    .counter-container p {
+        margin: 0;
+        margin-bottom: 5px;
+    }
+
+    .counter-container small {
+        opacity: 0.8;
+    }
+
+    .counter-container small:hover {
+        opacity: 1;
+    }
+`;
+document.head.appendChild(styles);
+
+// Optional: Add reset functionality for testing
+function resetVisitCount() {
+    localStorage.removeItem(repoVisitKey);
+    pageVisits = 0;
+    document.getElementById('visit-count').textContent = pageVisits;
+}

@@ -14,9 +14,12 @@ const resetBtn = document.getElementById('resetBtn');
 const clearSearchedElement = document.getElementById('clearSearchedElement');
 
 let numbers = [];
+let stepCounter = 0;
 
 // Event listener for the submit button
-submitBtn.addEventListener('click', () => {
+submitBtn.addEventListener('click', handleSubmit);
+
+function handleSubmit() {
     stepsDisplay.innerHTML = ""; // Clear previous steps
     const input = numbersInput.value.trim();
     
@@ -28,41 +31,21 @@ submitBtn.addEventListener('click', () => {
 
     numbers = input.split(' ').map(Number); // Convert input into an array of numbers
     
-
     if (numbers.length === 0) {
-        alert("No valid numbers entered. ");
+        alert("No valid numbers entered.");
         return;
     }
 
     renderArray(); // Render the array after filtering
-});
-
-
+}
 
 // Event listener for sorting button
-sortBtn.addEventListener('click', () => {
+sortBtn.addEventListener('click', async () => {
     const algorithm = algorithmSelect.value;
     actionDisplay.textContent = `Sorting using ${algorithm}...`;
     stepsDisplay.innerHTML = ""; // Clear previous steps
-    switch (algorithm) {
-        case 'bubble':
-            bubbleSort(numbers);
-            break;
-        case 'selection':
-            selectionSort(numbers);
-            break;
-        case 'insertion':
-            insertionSort(numbers);
-            break;
-        case 'merge':
-            mergeSort(numbers);
-            break;
-        case 'quick':
-            quickSort(numbers);
-            break;
-        default:
-            alert("Invalid sorting algorithm selected.");
-    }
+    stepCounter = 0; // Reset step counter for sorting
+    await performSorting(algorithm);
 });
 
 // Event listener for searching button
@@ -76,495 +59,771 @@ searchBtn.addEventListener('click', () => {
 
     actionDisplay.textContent = `Searching for ${searchValue} using ${searchAlgorithm}...`;
     stepsDisplay.innerHTML = ""; // Clear previous steps
-    switch (searchAlgorithm) {
-        case 'linear':
-            linearSearch(numbers, searchValue);
-            break;
-        case 'binary':
-            binarySearch(numbers, searchValue);
-            break;
-        default:
-            alert("Invalid search algorithm selected.");
-    }
+    stepCounter = 0; // Reset step counter for searching
+    performSearching(searchAlgorithm, searchValue);
 });
 
 // Event listener for reset button
-resetBtn.addEventListener('click', () => {
-    numbersInput.value = '';
-    arrayContainer.innerHTML = '';
-    actionDisplay.textContent = 'Actions will be displayed here...';
-    stepsDisplay.innerHTML = '';
-    numbers = [];
-});
+resetBtn.addEventListener('click', resetInputs);
 
 // Event listener for clear searched element button
-clearSearchedElement.addEventListener('click', () => {
-    const bars = document.querySelectorAll('.array-bar.success');
-    bars.forEach(bar => {
-        bar.classList.remove('success');
-    });
-});
+clearSearchedElement.addEventListener('click', clearSearchedElements);
 
 // Event listener for speed range adjustment
 speedRange.addEventListener('input', () => {
     speedValue.textContent = `${speedRange.value} ms`;
 });
 
-document.getElementById('saveSteps').addEventListener('click', () => {
-    const steps = document.getElementById('stepsDisplay').innerHTML;
-    const blob = new Blob([steps], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'steps.txt';
-    a.click();
-  });
+// Save steps to a text file with improved formatting
+document.getElementById('saveSteps').addEventListener('click', saveStepsToFile);
+
 // Render the array in bars
 function renderArray() {
-    arrayContainer.innerHTML = ''; // Clear previous bars
+    arrayContainer.innerHTML = '';
+    const maxNum = Math.max(...numbers);
+    
     numbers.forEach((num, index) => {
         const bar = document.createElement('div');
         bar.classList.add('array-bar');
-        bar.style.height = `${num * 3}px`; // Adjust height based on number
-        bar.innerHTML = `<span>${num}</span>`;
-        arrayContainer.appendChild(bar);
-    });
-}
-
-// Sorting Algorithms
-async function bubbleSort(arr) {
-    const len = arr.length;
-    let isSortedFlag = true;
-
-    for (let i = 0; i < len - 1; i++) {
-        for (let j = 0; j < len - i - 1; j++) {
-            updateSteps(`Bubble Sort: Comparing ${arr[j]} and ${arr[j + 1]}`);
-            
-            if (arr[j] > arr[j + 1]) {
-                isSortedFlag = false;
-                await swap(arr, j, j + 1);
-                updateSteps(`Bubble Sort: Swapping ${arr[j]} and ${arr[j + 1]}`, `${arr[j]} ↔ ${arr[j + 1]}`, `Comparison: ${arr[j]} > ${arr[j + 1]}`);
-            } else {
-                updateSteps(`Bubble Sort: No swap needed for ${arr[j]} and ${arr[j + 1]}`, '', `Comparison: ${arr[j]} <= ${arr[j + 1]}`);
-            }
-        }
-        renderArray();
-    }
-
-    updateSteps(`Bubble Sort: Finished. Array is sorted.`, '', '', isSortedFlag);
-}
-
-
-
-async function selectionSort(arr) {
-    const len = arr.length;
-    let isSortedFlag = true;
-
-    for (let i = 0; i < len - 1; i++) {
-        let minIndex = i;
-        for (let j = i + 1; j < len; j++) {
-            updateSteps(`Selection Sort: Comparing ${arr[i]} and ${arr[j]}`);
-            
-            if (arr[j] < arr[minIndex]) {
-                minIndex = j;
-                updateSteps(`Selection Sort: Found new minimum ${arr[minIndex]} at index ${minIndex}`, '', `Comparison: ${arr[i]} > ${arr[j]}`);
-            } else {
-                updateSteps(`Selection Sort: No new minimum found`, '', `Comparison: ${arr[i]} <= ${arr[j]}`);
-            }
-        }
-
-        if (minIndex !== i) {
-            await swap(arr, i, minIndex);
-            updateSteps(`Selection Sort: Swapping ${arr[i]} and ${arr[minIndex]}`, `${arr[i]} ↔ ${arr[minIndex]}`, `Comparison: ${arr[i]} > ${arr[minIndex]}`);
-        }
-
-        renderArray();
-    }
-
-    updateSteps(`Selection Sort: Finished. Array is sorted.`, '', '', isSortedFlag);
-}
-
-
-
-async function insertionSort(arr) {
-    const len = arr.length;
-    let isSortedFlag = true;
-
-    for (let i = 1; i < len; i++) {
-        let key = arr[i];
-        let j = i - 1;
-        updateSteps(`Insertion Sort: Key = ${key}`);
-
-        while (j >= 0 && arr[j] > key) {
-            arr[j + 1] = arr[j];
-            j--;
-            updateSteps(`Insertion Sort: Moving ${arr[j + 1]} to the right`, '', `Comparison: ${arr[j + 1]} > ${key}`);
-            renderArray(); // Update the array display
-            await new Promise(resolve => setTimeout(resolve, speedRange.value));
-        }
-
-        arr[j + 1] = key;
-        renderArray(); // Update the array display
-        await new Promise(resolve => setTimeout(resolve, speedRange.value));
-    }
-
-    updateSteps(`Insertion Sort: Finished. Array is sorted.`, '', '', isSortedFlag);
-}
-
-
-async function mergeSort(array, left = 0, right = array.length - 1) {
-    if (left >= right) {
-        return; // Base case: single element
-    }
-
-    const mid = Math.floor((left + right) / 2);
-    
-    // Render the current state of the array after splitting
-    renderArray();
-    updateSteps(`Splitting: Left [${array.slice(left, mid + 1)}], Right [${array.slice(mid + 1, right + 1)}]`);
-    
-    // Add a slight delay for visualization
-    await new Promise(resolve => setTimeout(resolve, speedRange.value));
-
-    // Recursively sort both halves
-    await mergeSort(array, left, mid);
-    await mergeSort(array, mid + 1, right);
-
-    // Merge the sorted halves
-    await merge(array, left, mid, right);
-    
-    // Log the merge completion and update array display
-    renderArray();
-    updateSteps(`Merge Completed: [${array.slice(left, right + 1)}]`);
-}
-
-async function merge(array, left, mid, right) {
-    let n1 = mid - left + 1;
-    let n2 = right - mid;
-
-    let leftArray = new Array(n1);
-    let rightArray = new Array(n2);
-
-    // Copy data to temp arrays leftArray[] and rightArray[]
-    for (let i = 0; i < n1; i++) {
-        leftArray[i] = array[left + i];
-    }
-    for (let i = 0; i < n2; i++) {
-        rightArray[i] = array[mid + 1 + i];
-    }
-
-    // Render the current left and right arrays
-    renderArray();
-    updateSteps(`Merging Left [${leftArray}] and Right [${rightArray}]`);
-    
-    // Add a slight delay for visualization
-    await new Promise(resolve => setTimeout(resolve, speedRange.value));
-
-    let i = 0, j = 0, k = left;
-
-    // Merge the temp arrays back into the main array
-    while (i < n1 && j < n2) {
-        if (leftArray[i] <= rightArray[j]) {
-            array[k] = leftArray[i];
-            updateSteps(`Inserting ${leftArray[i]} from Left Array into position ${k} in the main array`);
-            i++;
-        } else {
-            array[k] = rightArray[j];
-            updateSteps(`Inserting ${rightArray[j]} from Right Array into position ${k} in the main array`);
-            j++;
-        }
-        renderArray(); // Update the array display
-        await new Promise(resolve => setTimeout(resolve, speedRange.value)); // Animation delay
-        k++;
-    }
-
-    // Copy any remaining elements of leftArray[], if any
-    while (i < n1) {
-        array[k] = leftArray[i];
-        updateSteps(`Inserting remaining ${leftArray[i]} from Left Array into position ${k} in the main array`);
-        renderArray(); // Update the array display
-        await new Promise(resolve => setTimeout(resolve, speedRange.value)); // Animation delay
-        i++;
-        k++;
-    }
-
-    // Copy any remaining elements of rightArray[], if any
-    while (j < n2) {
-        array[k] = rightArray[j];
-        updateSteps(`Inserting remaining ${rightArray[j]} from Right Array into position ${k} in the main array`);
-        renderArray(); // Update the array display
-        await new Promise(resolve => setTimeout(resolve, speedRange.value)); // Animation delay
-        j++;
-        k++;
-    }
-
-    renderArray(); // Final render after merging
-}
-
-
-async function quickSort(arr, low = 0, high = arr.length - 1) {
-    if (low < high) {
-        // Select the pivot and partition the array
-        const pivotIndex = await partition(arr, low, high);
         
-        // Log the partition result
-        updateSteps(`Quick Sort: Partitioning complete. Pivot (${arr[pivotIndex]}) is now at index ${pivotIndex}.`);
-
-        // Recursively sort elements before and after partition
-        await quickSort(arr, low, pivotIndex - 1); // Left side of pivot
-        await quickSort(arr, pivotIndex + 1, high); // Right side of pivot
-    }
-
-    // When fully sorted
-    if (low === 0 && high === arr.length - 1) {
-        updateSteps('Quick Sort: Finished. Array is sorted.', '', '', true);
-    }
-}
-
-async function partition(arr, low, high) {
-    const pivot = arr[high];  // Select the last element as pivot
-    updateSteps(`Quick Sort: Selected pivot ${pivot} at index ${high}.`);
-    let i = low - 1;
-
-    for (let j = low; j < high; j++) {
-        // Compare current element with the pivot
-        updateSteps(`Quick Sort: Comparing ${arr[j]} with pivot ${pivot}.`);
-
-        if (arr[j] < pivot) {
-            i++;
-            // Swap if element is smaller than pivot
-            await swap(arr, i, j);
-            updateSteps(`Quick Sort: Swapped ${arr[i]} and ${arr[j]}.`);
-        }
-        renderArray(); // Update the array display
-        await new Promise(resolve => setTimeout(resolve, speedRange.value));
-    }
-
-    // Swap pivot into the correct position
-    await swap(arr, i + 1, high);
-    updateSteps(`Quick Sort: Moved pivot ${pivot} to index ${i + 1}.`);
-    renderArray(); // Update the array display
-    await new Promise(resolve => setTimeout(resolve, speedRange.value));
-
-    return i + 1;  // Return the pivot index
-}
-
-
-// Searching Algorithms
-async function linearSearch(arr, target) {
-    const len = arr.length;
-    let searchCompletedFlag = false;
-
-    for (let i = 0; i < len; i++) {
-        const bars = document.querySelectorAll('.array-bar');
-        bars.forEach(bar => bar.classList.remove('searching')); // Remove previous search class
-        bars[i].classList.add('searching'); // Highlight current bar being checked
-
-        updateSteps(`Linear Search: Comparing ${arr[i]} with ${target}`, '', `Comparison: ${arr[i]} == ${target}`);
-
-        if (arr[i] === target) {
-            bars[i].classList.remove('searching'); // Remove searching class
-            bars[i].classList.add('found'); // Mark the found element
-            updateSteps(`Linear Search: Found ${target} at index ${i}`, '', `Comparison: ${arr[i]} == ${target}`, false, true, target);
-            searchCompletedFlag = true;
-            break;
-        } else {
-            updateSteps(`Linear Search: ${arr[i]} is not ${target}`, '', `Comparison: ${arr[i]} != ${target}`);
-        }
-
-        await new Promise(resolve => setTimeout(resolve, speedRange.value));
-    }
-
-    if (!searchCompletedFlag) {
-        const bars = document.querySelectorAll('.array-bar');
-        bars.forEach(bar => bar.classList.remove('searching')); // Remove searching class from all bars
-        actionDisplay.textContent = `${target} not found!`;
-        updateSteps(`Linear Search: ${target} not found`, '', '', false, true, target);
-    } else {
-        updateSteps(`Linear Search: Search Completed`, '', '', false, true, target);
-    }
-}
-
-
-
-
-async function binarySearch(arr, target) {
-    // Check if the array is already sorted
-    if (!isSorted(arr)) {
-        arr.sort((a, b) => a - b);
-        renderArray(); // Update the array display
-    }
-
-    let left = 0;
-    let right = arr.length - 1;
-    while (left <= right) {
-        const mid = Math.floor((left + right) / 2);
-        const bars = document.querySelectorAll('.array-bar');
-        bars.forEach(bar => bar.classList.remove('searching')); // Remove previous search class
-        bars[mid].classList.add('searching'); // Highlight the mid element
-
-        updateSteps(`Binary Search: Checking ${arr[mid]}`, '', `Comparison: ${arr[mid]} == ${target}`);
-
-        if (arr[mid] === target) {
-            bars[mid].classList.remove('searching'); // Remove searching class
-            bars[mid].classList.add('found'); // Mark the found element
-            actionDisplay.textContent = `${target} found at index ${mid}!`;
-            updateSteps(`Binary Search: Found ${target} at index ${mid}`, '', `Comparison: ${arr[mid]} == ${target}`, false, true, target);
-            return;
-        } else if (arr[mid] < target) {
-            left = mid + 1;
-        } else {
-            right = mid - 1;
-        }
-
-        await new Promise(resolve => setTimeout(resolve, speedRange.value));
-    }
-
-    actionDisplay.textContent = `${target} not found!`;
-    updateSteps(`Binary Search: ${target} not found`, '', '', false, true, target);
-}
-
-
-
-// Function to check if the array is sorted
-function isSorted(arr) {
-    for (let i = 0; i < arr.length - 1; i++) {
-        if (arr[i] > arr[i + 1]) {
-            return false;
-        }
-    }
-    return true;
-}
-
-// Swap function for sorting algorithms
-async function swap(arr, i, j) {
-    const bars = document.querySelectorAll('.array-bar');
-    const heightI = arr[i] * 3;
-    const heightJ = arr[j] * 3;
-
-    // Add CSS transition for smooth swapping
-    bars[i].style.transition = 'height 0.5s ease, transform 0.5s ease';
-    bars[j].style.transition = 'height 0.5s ease, transform 0.5s ease';
-
-    // Temporarily adjust the position to animate swapping
-    bars[i].style.transform = `translateY(${heightJ - heightI}px)`; 
-    bars[j].style.transform = `translateY(${heightI - heightJ}px)`; 
-
-    // Swap the elements in the array
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-
-    // After the transition time, reset the transform property
-    await new Promise(resolve => setTimeout(resolve, 500)); // Wait for the transition to finish
-
-    // Update the heights of the bars after swapping
-    bars[i].style.height = `${heightJ}px`;
-    bars[j].style.height = `${heightI}px`;
-
-    // Reset the transform property for further animations
-    bars[i].style.transform = '';
-    bars[j].style.transform = '';
-
-    await new Promise(resolve => setTimeout(resolve, speedRange.value)); // Animation delay after swap
-}
-
-
-let stepCounter = 0; // Initialize step counter globally
-
-// Update steps
-function updateSteps(step, swapInfo = '', comparisonResult = '', isSorted = false, searchCompleted = false, searchTarget = '') {
-    // Only increment the step number for distinct steps
-    if (comparisonResult === '' && swapInfo === '' && !isSorted && !searchCompleted) {
-        stepCounter++;
-    }
-
-    const stepElement = document.createElement('div');
-    const algorithmName = actionDisplay.textContent.split(' ')[0]; // Assuming actionDisplay contains the algorithm name
-    
-    // Step number and algorithm name (already available)
-    if (stepsDisplay.children.length === 0) {
-        const algorithmHeader = document.createElement('h3');
-        algorithmHeader.textContent = `${algorithmName} Steps:`;
-        stepsDisplay.appendChild(algorithmHeader);
-    }
-
-    // Display the current step
-    if (step) {
-        stepElement.textContent = `Step ${stepCounter}: ${step}`;
-        stepsDisplay.appendChild(stepElement);
-    }
-
-    // Display swapping information if available
-    if (swapInfo) {
-        const swapElement = document.createElement('div');
-        swapElement.textContent = `Swap: ${swapInfo}`;
-        stepsDisplay.appendChild(swapElement);
-    }
-
-    // Display comparison result if available
-    if (comparisonResult) {
-        const comparisonElement = document.createElement('div');
-        comparisonElement.textContent = `Comparison: ${comparisonResult}`;
-        stepsDisplay.appendChild(comparisonElement);
-    }
-
-    // Indicate whether the array is sorted (only show "Sorted: Yes" once array is sorted)
-    if (isSorted) {
-        const sortedElement = document.createElement('div');
-        sortedElement.textContent = "Sorted: Yes";
-        stepsDisplay.appendChild(sortedElement);
-    }
-
-    // Display the final message when the search algorithm is completed
-    if (searchCompleted) {
-        const searchResult = searchTarget ? `${searchTarget} found` : `Target not found`;
-        const searchElement = document.createElement('div');
-        searchElement.textContent = `Search Completed: ${searchResult}`;
-        stepsDisplay.appendChild(searchElement);
-    }
-}
-
-
-
-
-
-// Render the array in bars
-function renderArray() {
-    arrayContainer.innerHTML = ''; // Clear previous bars
-    numbers.forEach((num, index) => {
-        const bar = document.createElement('div');
-        bar.classList.add('array-bar');
-        bar.style.height = `${num * 3}px`; // Adjust height based on number
-        bar.innerHTML = `<span>${num}</span>`;
+        // Calculate relative height (max height 300px)
+        const height = (num / maxNum) * 300;
+        bar.style.height = `${height}px`;
+        bar.style.width = `${Math.max(30, 600/numbers.length)}px`; // Responsive width
+        
+        // Add value label
+        bar.textContent = num;
+        
+        // Add data attributes for animations
+        bar.dataset.value = num;
+        bar.dataset.index = index;
+        
         arrayContainer.appendChild(bar);
     });
 }
 
+// Perform sorting based on the selected algorithm
+async function performSorting(algorithm) {
+    switch (algorithm) {
+        case 'bubble':
+            await bubbleSort(numbers);
+            break;
+        case 'selection':
+            await selectionSort(numbers);
+            break;
+        case 'insertion':
+            await insertionSort(numbers);
+            break;
+        case 'merge':
+            await mergeSort(numbers);
+            break;
+        case 'quick':
+            await quickSort(numbers);
+            break;
+        default:
+            alert("Invalid sorting algorithm selected.");
+    }
+}
 
-document.getElementById('saveSteps').addEventListener('click', () => {
-    let stepsText = '';
-    const algorithmName = actionDisplay.textContent.split(' ')[0]; // Extract algorithm name
-    stepsText += `Algorithm: ${algorithmName}\n\n`;  // Add algorithm name as a header
-
-    // Go through each step and create a readable format
-    stepCounter = 1; // Reset the step counter for download
-    stepsDisplay.querySelectorAll('div').forEach((stepElement, index) => {
-        if (index > 0) { // Avoid the first header (algorithm name)
-            stepsText += `Step ${stepCounter}: ${stepElement.textContent}\n`;
-            if (stepElement.textContent.includes('Swap') || stepElement.textContent.includes('Comparison')) {
-                // Group swaps and comparisons under the same step
-                stepsText += `  ${stepElement.textContent}\n`;
-            } else {
-                stepCounter++; // Increment the step counter after each distinct step
+// Perform searching based on the selected algorithm
+function performSearching(searchAlgorithm, searchValue) {
+    switch (searchAlgorithm) {
+        case 'linear':
+            linearSearch(numbers, searchValue);
+            break;
+        case 'binary':
+            if (!isSorted(numbers)) {
+                alert("Array must be sorted before performing binary search.");
+                return;
             }
+            binarySearch(numbers, searchValue);
+            break;
+        default:
+            alert("Invalid search algorithm selected.");
+    }
+}
+
+// Reset all inputs and states
+function resetInputs() {
+    numbersInput.value = '';
+    arrayContainer.innerHTML = '';
+    actionDisplay.textContent = 'Actions will be displayed here...';
+    stepsDisplay.innerHTML = '';
+    numbers = [];
+}
+
+// Clear searched elements from the visual representation
+function clearSearchedElements() {
+    const bars = document.querySelectorAll('.array-bar');
+    bars.forEach(bar => {
+        // Remove all special state classes
+        bar.classList.remove('found', 'searching', 'checked', 'range', 'comparing', 'current', 'sorted');
+        
+        // Reset the background color and other styles with animation
+        bar.animate([
+            { 
+                backgroundColor: bar.style.backgroundColor,
+                opacity: parseFloat(bar.style.opacity) || 1,
+                boxShadow: bar.style.boxShadow
+            },
+            { 
+                backgroundColor: 'initial',
+                opacity: 1,
+                boxShadow: 'none'
+            }
+        ], {
+            duration: 300,
+            easing: 'ease-out',
+            fill: 'forwards'
+        });
+
+        // Reset inline styles
+        bar.style.removeProperty('background');
+        bar.style.removeProperty('background-color');
+        bar.style.removeProperty('opacity');
+        bar.style.removeProperty('box-shadow');
+        bar.style.removeProperty('transform');
+        
+        // If you're using a gradient background, reset to original gradient
+        bar.style.background = 'var(--original-background, linear-gradient(to top, #2196F3, #1976D2))';
+    });
+
+    // Reset any relevant display text
+    actionDisplay.textContent = 'Cleared search visualization';
+}
+
+// Save steps to a text file
+function saveStepsToFile() {
+    let stepsText = '';
+    const algorithmName = actionDisplay.textContent.split(' ')[0];
+    stepsText += `Algorithm: ${algorithmName}\n\n`;
+
+    let stepCounter = 1;
+    stepsDisplay.querySelectorAll('div').forEach((stepElement) => {
+        const textContent = stepElement.textContent.trim();
+        if (!textContent.startsWith('Step:')) {
+            stepsText += `${textContent}\n`;
+        } else {
+            stepsText += `Step ${stepCounter}: ${textContent.replace(/^Step \d+: /, '')}\n`;
+            stepCounter++;
         }
     });
 
-    // Create the Blob and download the file
     const blob = new Blob([stepsText], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = 'algorithm_steps.txt';
     a.click();
-});
+}
 
+
+// Enhanced swap visualization
+async function visualizeSwap(index1, index2) {
+    const bars = document.querySelectorAll('.array-bar');
+    const bar1 = bars[index1];
+    const bar2 = bars[index2];
+    
+    // Add swapping class for animation
+    bar1.classList.add('swapping');
+    bar2.classList.add('swapping');
+    
+    // Calculate positions for swap animation
+    const bar1Rect = bar1.getBoundingClientRect();
+    const bar2Rect = bar2.getBoundingClientRect();
+    const distance = bar2Rect.left - bar1Rect.left;
+    
+    // Animate the swap
+    await Promise.all([
+        bar1.animate([
+            { transform: 'translateX(0) scale(1)' },
+            { transform: `translateX(${distance}px) scale(1.1)` },
+            { transform: 'translateX(0) scale(1)' }
+        ], {
+            duration: parseInt(speedRange.value) * 2,
+            easing: 'ease-in-out'
+        }).finished,
+        bar2.animate([
+            { transform: 'translateX(0) scale(1)' },
+            { transform: `translateX(${-distance}px) scale(1.1)` },
+            { transform: 'translateX(0) scale(1)' }
+        ], {
+            duration: parseInt(speedRange.value) * 2,
+            easing: 'ease-in-out'
+        }).finished
+    ]);
+    
+    // Remove swapping class
+    bar1.classList.remove('swapping');
+    bar2.classList.remove('swapping');
+}
+// Modify the bubbleSort function to use the enhanced visualization:
+async function bubbleSort(arr) {
+    const n = arr.length;
+    let step = 1;
+    const bars = document.querySelectorAll('.array-bar');
+
+    for (let i = 0; i < n - 1; i++) {
+        for (let j = 0; j < n - i - 1; j++) {
+            // Highlight comparing elements
+            bars[j].classList.add('comparing');
+            bars[j + 1].classList.add('comparing');
+            
+            updateStepsDisplay(`Step ${step++}: Comparing ${arr[j]} and ${arr[j + 1]}`);
+            actionDisplay.textContent = `Comparing ${arr[j]} and ${arr[j + 1]}`;
+            
+            await sleep(speedRange.value);
+
+            if (arr[j] > arr[j + 1]) {
+                // Visualize swap
+                await visualizeSwap(j, j + 1);
+                
+                // Perform actual swap
+                [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+                renderArray();
+                
+                updateStepsDisplay(`Step ${step++}: Swapped ${arr[j]} and ${arr[j + 1]}`);
+                actionDisplay.textContent = `Swapped ${arr[j]} and ${arr[j + 1]}`;
+            }
+
+            // Remove comparing highlight
+            bars[j].classList.remove('comparing');
+            bars[j + 1].classList.remove('comparing');
+        }
+        
+        // Mark sorted element
+        bars[n - i - 1].classList.add('sorted');
+    }
+    
+    // Mark first element as sorted
+    bars[0].classList.add('sorted');
+    
+    actionDisplay.textContent = 'Sorting complete!';
+    
+    // Final animation to show completion
+    const allBars = document.querySelectorAll('.array-bar');
+    allBars.forEach((bar, index) => {
+        setTimeout(() => {
+            bar.style.background = 'linear-gradient(to top, #4CAF50, #45a049)';
+        }, index * 50);
+    });
+}
+
+
+// Selection Sort
+// Enhanced Selection Sort
+async function selectionSort(arr) {
+    const n = arr.length;
+    let step = 1;
+    const bars = document.querySelectorAll('.array-bar');
+
+    for (let i = 0; i < n - 1; i++) {
+        let minIndex = i;
+        bars[i].classList.add('current');
+
+        for (let j = i + 1; j < n; j++) {
+            // Highlight comparing elements
+            bars[j].classList.add('comparing');
+            
+            updateStepsDisplay(`Step ${step++}: Comparing ${arr[j]} and ${arr[minIndex]}`);
+            actionDisplay.textContent = `Comparing ${arr[j]} and ${arr[minIndex]}`;
+            
+            await sleep(speedRange.value);
+
+            if (arr[j] < arr[minIndex]) {
+                bars[minIndex].classList.remove('min');
+                minIndex = j;
+                bars[minIndex].classList.add('min');
+            }
+            
+            bars[j].classList.remove('comparing');
+        }
+
+        if (minIndex !== i) {
+            // Visualize swap
+            await visualizeSwap(i, minIndex);
+            
+            // Perform actual swap
+            [arr[i], arr[minIndex]] = [arr[minIndex], arr[i]];
+            renderArray();
+            
+            updateStepsDisplay(`Step ${step++}: Swapped ${arr[i]} and ${arr[minIndex]}`);
+            actionDisplay.textContent = `Swapped ${arr[i]} and ${arr[minIndex]}`;
+        }
+
+        bars[i].classList.remove('current');
+        bars[i].classList.add('sorted');
+    }
+
+    // Mark last element as sorted
+    bars[n-1].classList.add('sorted');
+    
+    actionDisplay.textContent = 'Sorting complete!';
+    
+    // Final animation
+    const allBars = document.querySelectorAll('.array-bar');
+    allBars.forEach((bar, index) => {
+        setTimeout(() => {
+            bar.style.background = 'linear-gradient(to top, #4CAF50, #45a049)';
+        }, index * 50);
+    });
+}
+
+// Enhanced Insertion Sort
+async function insertionSort(arr) {
+    const n = arr.length;
+    let step = 1;
+    const bars = document.querySelectorAll('.array-bar');
+
+    // Mark first element as sorted
+    bars[0].classList.add('sorted');
+
+    for (let i = 1; i < n; i++) {
+        const key = arr[i];
+        let j = i - 1;
+        
+        bars[i].classList.add('current');
+        updateStepsDisplay(`Step ${step++}: Inserting ${key}`);
+        actionDisplay.textContent = `Inserting ${key}`;
+        await sleep(parseInt(speedRange.value));
+
+        while (j >= 0 && arr[j] > key) {
+            // Highlight comparing elements
+            bars[j].classList.add('comparing');
+            bars[j + 1].classList.add('comparing');
+            
+            updateStepsDisplay(`Step ${step++}: Comparing ${arr[j]} and ${key}`);
+            actionDisplay.textContent = `Comparing ${arr[j]} and ${key}`;
+            
+            await sleep(parseInt(speedRange.value));
+
+            // Visualize swap
+            await visualizeSwap(j, j + 1);
+            
+            // Perform actual swap
+            [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+            renderArray();
+            
+            updateStepsDisplay(`Step ${step++}: Swapped ${arr[j]} and ${arr[j + 1]}`);
+            actionDisplay.textContent = `Swapped ${arr[j]} and ${arr[j + 1]}`;
+
+            // Remove comparing highlight
+            bars[j].classList.remove('comparing');
+            bars[j + 1].classList.remove('comparing');
+            
+            j--;
+        }
+
+        // Remove current highlight
+        bars[i].classList.remove('current');
+        
+        // Mark sorted portion
+        for(let k = 0; k <= i; k++) {
+            bars[k].classList.add('sorted');
+        }
+        
+        await sleep(parseInt(speedRange.value));
+    }
+    
+    actionDisplay.textContent = 'Sorting complete!';
+    
+    // Final animation to show completion
+    const allBars = document.querySelectorAll('.array-bar');
+    allBars.forEach((bar, index) => {
+        setTimeout(() => {
+            bar.style.background = 'linear-gradient(to top, #4CAF50, #45a049)';
+        }, index * 50);
+    });
+}
+
+
+// Enhanced Merge Sort
+async function mergeSort(arr, left = 0, right = arr.length - 1) {
+    if (left >= right) return;
+
+    const mid = Math.floor((left + right) / 2);
+    const bars = document.querySelectorAll('.array-bar');
+
+    // Highlight current section
+    for(let i = left; i <= right; i++) {
+        bars[i].classList.add('current');
+    }
+    await sleep(speedRange.value);
+
+    // Remove highlight
+    for(let i = left; i <= right; i++) {
+        bars[i].classList.remove('current');
+    }
+
+    await mergeSort(arr, left, mid);
+    await mergeSort(arr, mid + 1, right);
+    await merge(arr, left, mid, right);
+}
+
+async function merge(arr, left, mid, right) {
+    const leftArray = arr.slice(left, mid + 1);
+    const rightArray = arr.slice(mid + 1, right + 1);
+    const bars = document.querySelectorAll('.array-bar');
+    
+    let i = 0, j = 0, k = left;
+    
+    // Highlight merging sections
+    for(let x = left; x <= right; x++) {
+        bars[x].classList.add('merging');
+    }
+
+    while (i < leftArray.length && j < rightArray.length) {
+        // Highlight comparing elements
+        bars[left + i].classList.add('comparing');
+        bars[mid + 1 + j].classList.add('comparing');
+        
+        updateStepsDisplay(`Step ${stepCounter++}: Comparing ${leftArray[i]} and ${rightArray[j]}`);
+        actionDisplay.textContent = `Comparing ${leftArray[i]} and ${rightArray[j]}`;
+        
+        await sleep(speedRange.value);
+        
+        if (leftArray[i] <= rightArray[j]) {
+            arr[k] = leftArray[i];
+            i++;
+        } else {
+            arr[k] = rightArray[j];
+            j++;
+        }
+        
+        renderArray();
+        k++;
+        
+        // Remove comparison highlight
+        document.querySelectorAll('.array-bar').forEach(bar => 
+            bar.classList.remove('comparing'));
+    }
+
+    // Copy remaining elements
+    while (i < leftArray.length) {
+        arr[k] = leftArray[i];
+        renderArray();
+        await sleep(speedRange.value);
+        i++;
+        k++;
+    }
+
+    while (j < rightArray.length) {
+        arr[k] = rightArray[j];
+        renderArray();
+        await sleep(speedRange.value);
+        j++;
+        k++;
+    }
+
+    // Remove merging highlight and mark as sorted
+    for(let x = left; x <= right; x++) {
+        bars[x].classList.remove('merging');
+        bars[x].classList.add('sorted');
+    }
+}
+
+
+// Enhanced Quick Sort (continued)
+async function quickSort(arr, left = 0, right = arr.length - 1) {
+    if (left < right) {
+        const bars = document.querySelectorAll('.array-bar');
+        
+        // Highlight current section
+        for(let i = left; i <= right; i++) {
+            bars[i].classList.add('current');
+        }
+        await sleep(speedRange.value);
+
+        const pivotIndex = await partition(arr, left, right);
+        
+        // Remove current highlight
+        for(let i = left; i <= right; i++) {
+            bars[i].classList.remove('current');
+        }
+
+        await quickSort(arr, left, pivotIndex - 1);
+        await quickSort(arr, pivotIndex + 1, right);
+    }
+}
+
+async function partition(arr, left, right) {
+    const pivot = arr[right];
+    let i = left - 1;
+    const bars = document.querySelectorAll('.array-bar');
+
+    // Highlight pivot
+    bars[right].classList.add('pivot');
+
+    for (let j = left; j < right; j++) {
+        bars[j].classList.add('comparing');
+        
+        updateStepsDisplay(`Step ${stepCounter++}: Comparing ${arr[j]} with pivot ${pivot}`);
+        actionDisplay.textContent = `Comparing ${arr[j]} with pivot ${pivot}`;
+        
+        await sleep(speedRange.value);
+
+        if (arr[j] < pivot) {
+            i++;
+            // Visualize swap
+            await visualizeSwap(i, j);
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+            renderArray();
+            
+            updateStepsDisplay(`Step ${stepCounter++}: Swapped ${arr[i]} and ${arr[j]}`);
+            actionDisplay.textContent = `Swapped ${arr[i]} and ${arr[j]}`;
+        }
+
+        bars[j].classList.remove('comparing');
+    }
+
+    // Visualize final swap with pivot
+    await visualizeSwap(i + 1, right);
+    [arr[i + 1], arr[right]] = [arr[right], arr[i + 1]];
+    renderArray();
+    
+    updateStepsDisplay(`Step ${stepCounter++}: Moved pivot ${pivot} to position ${i + 1}`);
+    actionDisplay.textContent = `Moved pivot ${pivot} to position ${i + 1}`;
+
+    // Remove pivot highlight
+    bars[right].classList.remove('pivot');
+    
+    // Mark the pivot position as sorted
+    bars[i + 1].classList.add('sorted');
+
+    return i + 1;
+}
+
+// Linear Search
+async function linearSearch(arr, target) {
+    const bars = document.querySelectorAll('.array-bar');
+    
+    // Reset any previous search styling
+    bars.forEach(bar => {
+        bar.classList.remove('found', 'searching', 'checked');
+    });
+
+    for (let i = 0; i < arr.length; i++) {
+        // Add searching animation
+        bars[i].classList.add('searching');
+        
+        // Animate the current bar being checked
+        bars[i].animate([
+            { transform: 'scale(1)', backgroundColor: '#ffd700' },
+            { transform: 'scale(1.2)', backgroundColor: '#ff9800' },
+            { transform: 'scale(1)', backgroundColor: '#ffd700' }
+        ], {
+            duration: parseInt(speedRange.value),
+            easing: 'ease-in-out'
+        });
+
+        updateStepsDisplay(`Step ${i + 1}: Checking element ${arr[i]} at index ${i}`);
+        actionDisplay.textContent = `Searching for ${target} - checking element ${arr[i]} at index ${i}`;
+        
+        await sleep(speedRange.value);
+
+        // Mark as checked
+        bars[i].classList.remove('searching');
+        bars[i].classList.add('checked');
+
+        if (arr[i] === target) {
+            // Found animation
+            bars[i].classList.add('found');
+            bars[i].animate([
+                { transform: 'scale(1)', backgroundColor: '#4CAF50' },
+                { transform: 'scale(1.3)', backgroundColor: '#45a049' },
+                { transform: 'scale(1)', backgroundColor: '#4CAF50' }
+            ], {
+                duration: 500,
+                iterations: 2,
+                easing: 'ease-in-out'
+            });
+
+            actionDisplay.textContent = `Found ${target} at index ${i}!`;
+            updateStepsDisplay(`Result: ${target} found at index ${i}`);
+            return;
+        }
+    }
+
+    // Not found animation
+    bars.forEach(bar => {
+        bar.animate([
+            { backgroundColor: '#ff6b6b' },
+            { backgroundColor: '#original' }
+        ], {
+            duration: 500,
+            easing: 'ease-out'
+        });
+    });
+
+    actionDisplay.textContent = `${target} not found in the array.`;
+    updateStepsDisplay(`Result: ${target} not found in the array.`);
+}
+
+
+// Enhanced Binary Search
+async function binarySearch(arr, target) {
+    const bars = document.querySelectorAll('.array-bar');
+    let left = 0;
+    let right = arr.length - 1;
+
+    // Reset any previous search styling
+    bars.forEach(bar => {
+        bar.classList.remove('found', 'searching', 'checked', 'range');
+    });
+
+    while (left <= right) {
+        const mid = Math.floor((left + right) / 2);
+
+        // Highlight current search range
+        for (let i = 0; i < bars.length; i++) {
+            if (i >= left && i <= right) {
+                bars[i].classList.add('range');
+            } else {
+                bars[i].classList.remove('range');
+            }
+        }
+
+        // Animate middle element
+        bars[mid].classList.add('searching');
+        await bars[mid].animate([
+            { transform: 'scale(1)', backgroundColor: '#ffd700' },
+            { transform: 'scale(1.3)', backgroundColor: '#ff9800' },
+            { transform: 'scale(1)', backgroundColor: '#ffd700' }
+        ], {
+            duration: parseInt(speedRange.value),
+            easing: 'ease-in-out'
+        }).finished;
+
+        updateStepsDisplay(`Step ${stepCounter++}: Checking middle element ${arr[mid]} at index ${mid}`);
+        actionDisplay.textContent = `Searching for ${target} - checking middle element ${arr[mid]}`;
+        
+        await sleep(speedRange.value);
+
+        if (arr[mid] === target) {
+            // Found animation
+            bars[mid].classList.remove('searching');
+            bars[mid].classList.add('found');
+            await bars[mid].animate([
+                { transform: 'scale(1)', backgroundColor: '#4CAF50' },
+                { transform: 'scale(1.4)', backgroundColor: '#45a049' },
+                { transform: 'scale(1)', backgroundColor: '#4CAF50' }
+            ], {
+                duration: 600,
+                iterations: 2,
+                easing: 'ease-in-out'
+            }).finished;
+
+            actionDisplay.textContent = `${target} found at index ${mid}!`;
+            updateStepsDisplay(`Result: ${target} found at index ${mid}`);
+            return;
+        }
+
+        bars[mid].classList.remove('searching');
+        bars[mid].classList.add('checked');
+
+        if (arr[mid] < target) {
+            // Animate eliminated left half
+            for (let i = left; i <= mid; i++) {
+                bars[i].classList.remove('range');
+                bars[i].animate([
+                    { opacity: 1 },
+                    { opacity: 0.3 }
+                ], {
+                    duration: 300,
+                    fill: 'forwards'
+                });
+            }
+            left = mid + 1;
+            updateStepsDisplay(`Step ${stepCounter++}: Target is greater, moving right`);
+        } else {
+            // Animate eliminated right half
+            for (let i = mid; i <= right; i++) {
+                bars[i].classList.remove('range');
+                bars[i].animate([
+                    { opacity: 1 },
+                    { opacity: 0.3 }
+                ], {
+                    duration: 300,
+                    fill: 'forwards'
+                });
+            }
+            right = mid - 1;
+            updateStepsDisplay(`Step ${stepCounter++}: Target is smaller, moving left`);
+        }
+
+        await sleep(speedRange.value);
+    }
+
+    // Not found animation
+    bars.forEach(bar => {
+        bar.animate([
+            { backgroundColor: '#ff6b6b' },
+            { backgroundColor: '#original' }
+        ], {
+            duration: 500,
+            easing: 'ease-out'
+        });
+    });
+
+    actionDisplay.textContent = `${target} not found in the array.`;
+    updateStepsDisplay(`Result: ${target} not found in the array.`);
+}
+
+
+// Utility function to check if the array is sorted
+function isSorted(arr) {
+    for (let i = 1; i < arr.length; i++) {
+        if (arr[i] < arr[i - 1]) return false;
+    }
+    return true;
+}
+
+// Utility function to sleep for a specified duration
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Update steps display
+function updateStepsDisplay(message) {
+    const stepElement = document.createElement('div');
+    stepElement.textContent = message;
+    stepsDisplay.appendChild(stepElement);
+}
+
+// Initial setup
+function initialize() {
+    speedValue.textContent = `${speedRange.value} ms`;
+    resetInputs();
+}
+
+// Call initialize on page load
+window.onload = initialize;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function updateVisitCount() {
+    fetch('https://algovis.goatcounter.com/counter/' + encodeURIComponent(location.pathname) + '.json')
+        .then(response => response.json())
+        .then(data => {
+            const count = data.count;
+            document.querySelector('#visit-count span').textContent = count;
+        })
+        .catch(error => {
+            console.error('Error fetching visit count:', error);
+            document.querySelector('#visit-count span').textContent = 'Error';
+        });
+}
+
+// Call this function when the page loads
+document.addEventListener('DOMContentLoaded', updateVisitCount);

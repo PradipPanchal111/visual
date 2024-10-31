@@ -820,8 +820,8 @@ visitDisplay.className = 'counter-container';
 
 // Get GitHub repository info
 const githubInfo = {
-    username: 'YOUR_GITHUB_USERNAME', // Replace with your GitHub username
-    repo: 'YOUR_REPO_NAME'           // Replace with your repository name
+    username: 'PradipPanchal111', // Replace with your GitHub username
+    repo: 'visual'           // Replace with your repository name
 };
 
 visitDisplay.innerHTML = `

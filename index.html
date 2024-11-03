@@ -66,7 +66,27 @@
         <!-- Steps Display (scrollable) -->
         <div class="steps-display" id="stepsDisplay"></div>
     </div>
+    <div id="visit-counter">
+        Total Visits: <span id="visit-count">Loading...</span>
+    </div>
 
+    <script>
+        async function updateVisitCount() {
+            const counterElement = document.getElementById("visit-count");
+            try {
+                // Use CountAPI to get and update the visit count
+                const response = await fetch("https://api.countapi.xyz/hit/PradipPanchal345/visual/visits");
+                const data = await response.json();
+                counterElement.textContent = data.value;
+            } catch (error) {
+                counterElement.textContent = "Error loading count";
+                console.error("Failed to load visit count:", error);
+            }
+        }
+
+        // Call the function when the page loads
+        window.onload = updateVisitCount;
+    </script>
 
     <script src="script.js"></script>
 

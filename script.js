@@ -660,7 +660,6 @@ async function linearSearch(arr, target) {
     updateStepsDisplay(`Result: ${target} not found in the array.`);
 }
 
-
 // Enhanced Binary Search
 async function binarySearch(arr, target) {
     const bars = document.querySelectorAll('.array-bar');
@@ -751,10 +750,8 @@ async function binarySearch(arr, target) {
             right = mid - 1;
             updateStepsDisplay(`Step ${stepCounter++}: Target is smaller, moving left`);
         }
-
         await sleep(speedRange.value);
     }
-
     // Not found animation
     bars.forEach(bar => {
         bar.animate([
@@ -765,12 +762,9 @@ async function binarySearch(arr, target) {
             easing: 'ease-out'
         });
     });
-
     actionDisplay.textContent = `${target} not found in the array.`;
     updateStepsDisplay(`Result: ${target} not found in the array.`);
 }
-
-
 // Utility function to check if the array is sorted
 function isSorted(arr) {
     for (let i = 1; i < arr.length; i++) {
@@ -778,7 +772,6 @@ function isSorted(arr) {
     }
     return true;
 }
-
 // Utility function to sleep for a specified duration
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -796,18 +789,5 @@ function initialize() {
     speedValue.textContent = `${speedRange.value} ms`;
     resetInputs();
 }
-
 // Call initialize on page load
 window.onload = initialize;
-
-
-
-
-
-
-
-
-
-
-
-

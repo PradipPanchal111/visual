@@ -49,7 +49,8 @@ sortBtn.addEventListener('click', async () => {
 });
 
 // Event listener for searching button
-searchBtn.addEventListener('click', () => {
+searchBtn.addEventListener('click', () => { 
+
     const searchAlgorithm = searchAlgorithmSelect.value;
     const searchValue = parseInt(prompt("Enter number to search:"));
     if (isNaN(searchValue)) {
